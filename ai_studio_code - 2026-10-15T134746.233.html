@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ФБК // Control Resonant: Аттестация фанатов</title>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #14161d;
+      --card-border: #232733;
+      --accent-red: #e52534;
+      --accent-red-glow: rgba(229, 37, 52, 0.35);
+      --accent-violet: #8c52ff;
+      --accent-gold: #f59e0b;
+      --text: #f3f4f6;
+      --text-muted: #94a3b8;
+      --option-bg: #1a1d27;
+      --option-active: #282d3d;
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.16);
+      --error: #ef4444;
+      --error-bg: rgba(239, 68, 68, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 12px calc(24px + env(safe-area-inset-bottom, 16px));
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(229, 37, 52, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(140, 82, 255, 0.08) 0%, transparent 45%);
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .fbc-topbar {
+      border-left: 3px solid var(--accent-red);
+      background: rgba(20, 22, 29, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .fbc-brand {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent-red);
+    }
+
+    .fbc-badge {
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      padding: 1px 6px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      position: relative;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-violet));
+      border-radius: 12px 12px 0 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .diff-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .diff-chip {
+      background: var(--option-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .diff-chip:active {
+      transform: scale(0.97);
+    }
+
+    .diff-chip.active {
+      border-color: var(--accent-red);
+      background: rgba(229, 37, 52, 0.12);
+      box-shadow: 0 0 10px var(--accent-red-glow);
+    }
+
+    .diff-chip .title {
+      font-weight: 700;
+      font-size: 13px;
+      display: block;
+    }
+
+    .diff-chip .meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: block;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      height: 50px;
+      background: var(--accent-red);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .btn-next {
+      background: #3b82f6;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 5px;
+      background: #1f232e;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-red), var(--accent-violet));
+      transition: width 0.25s ease;
+    }
+
+    .quiz-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .tag {
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .tag-easy { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .tag-medium { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .tag-hard { background: rgba(229, 37, 52, 0.2); color: #f87171; }
+    .tag-multi { background: rgba(140, 82, 255, 0.2); color: #c084fc; margin-left: 6px; }
+
+    /* Выпадающая подсказка */
+    .hint-details {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px dashed rgba(245, 158, 11, 0.4);
+      border-radius: 8px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .hint-details[open] {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: var(--accent-gold);
+    }
+
+    .hint-summary {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fbbf24;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      list-style: none;
+    }
+
+    .hint-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .hint-summary::after {
+      content: "▾";
+      margin-left: auto;
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    .hint-details[open] .hint-summary::after {
+      transform: rotate(180deg);
+    }
+
+    .hint-content {
+      padding: 0 12px 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #fef3c7;
+      border-top: 1px solid rgba(245, 158, 11, 0.2);
+      padding-top: 8px;
+    }
+
+    /* Опции */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .option-card {
+      display: flex;
+      align-items: center;
+      background: var(--option-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-height: 50px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .option-card:active:not(.locked) {
+      background: var(--option-active);
+    }
+
+    .option-card.checked {
+      background: var(--option-active);
+      border-color: var(--accent-violet);
+    }
+
+    .option-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #4b5563;
+      border-radius: 4px;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .option-card.checked .option-checkbox {
+      background: var(--accent-violet);
+      border-color: var(--accent-violet);
+    }
+
+    .option-card.checked .option-checkbox::after {
+      content: "✓";
+      color: #fff;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .option-title {
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .option-card.correct {
+      background: var(--success-bg) !important;
+      border-color: var(--success) !important;
+    }
+    .option-card.correct .option-checkbox {
+      background: var(--success) !important;
+      border-color: var(--success) !important;
+    }
+
+    .option-card.incorrect {
+      background: var(--error-bg) !important;
+      border-color: var(--error) !important;
+    }
+    .option-card.incorrect .option-checkbox {
+      background: var(--error) !important;
+      border-color: var(--error) !important;
+    }
+
+    .option-card.missed {
+      border: 2px dashed var(--success) !important;
+    }
+
+    .lore-card {
+      display: none;
+      background: #0f1118;
+      border-left: 3px solid var(--accent-violet);
+      border-radius: 0 6px 6px 0;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .lore-title {
+      color: #c084fc;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .final-score {
+      font-size: 44px;
+      font-weight: 900;
+      margin: 10px 0;
+    }
+
+    .rank-pill {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border: 1px solid var(--accent-red);
+      color: var(--accent-red);
+      margin-bottom: 14px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0 24px;
+    }
+
+    .stat-box {
+      background: var(--option-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+
+    .stat-box .val {
+      font-size: 17px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .stat-box .lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <header class="fbc-topbar">
+      <div class="fbc-brand">ФБК // ТЕРМИНАЛ «РЕЗОНАНС»</div>
+      <div class="fbc-badge">УРОВЕНЬ 5</div>
+    </header>
+
+    <!-- СТАРТОВЫЙ ЭКРАН -->
+    <div id="start-screen" class="screen active">
+      <div class="card">
+        <h1>Control Resonant: Викторина</h1>
+        <p>
+          Сентябрь 2026 года. Нарушена изоляция Старейшего Дома. Аномалия «Паттернинг / Узор» искривила Манхэттен, а Дилан Фейден вступил в битву за остатки человечества. Пройдите квалификационный тест на знание русской версии игры.
+        </p>
+
+        <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); display: block; margin-bottom: 8px;">
+          Выберите сложность (по 25 вопросов):
+        </label>
+
+        <div class="diff-selector">
+          <div class="diff-chip active" data-diff="easy">
+            <span class="title" style="color: #34d399;">Легкий</span>
+            <span class="meta">25 вопросов</span>
+          </div>
+          <div class="diff-chip" data-diff="medium">
+            <span class="title" style="color: #fbbf24;">Средний</span>
+            <span class="meta">25 вопросов</span>
+          </div>
+          <div class="diff-chip" data-diff="hard">
+            <span class="title" style="color: #f87171;">Сложный</span>
+            <span class="meta">25 вопросов</span>
+          </div>
+          <div class="diff-chip" data-diff="all">
+            <span class="title" style="color: #c084fc;">Все уровни</span>
+            <span class="meta">75 вопросов</span>
+          </div>
+        </div>
+
+        <p style="font-size: 12px; color: #a78bfa; margin-bottom: 20px;">
+          * В вопросах поддерживается множественный выбор. При затруднении раскройте выпадающую подсказку куратора.
+        </p>
+
+        <button id="start-btn" class="btn">Начать аттестацию</button>
+      </div>
+    </div>
+
+    <!-- ЭКРАН ВИКТОРИНЫ -->
+    <div id="quiz-screen" class="screen">
+      <div class="card">
+        <div class="quiz-info-row">
+          <span id="q-counter">Вопрос 1 из 25</span>
+          <div>
+            <span id="diff-tag" class="tag">Сложность</span>
+            <span class="tag tag-multi">Мульти-выбор</span>
+          </div>
+        </div>
+
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+
+        <h2 id="q-text">Загрузка вопроса...</h2>
+
+        <!-- Выпадающая подсказка -->
+        <details id="hint-box" class="hint-details">
+          <summary class="hint-summary">💡 Подсказка от куратора Бюро</summary>
+          <div id="hint-content" class="hint-content">...</div>
+        </details>
+
+        <div id="options-container" class="options-grid"></div>
+
+        <div id="lore-box" class="lore-card">
+          <div class="lore-title">Архив Бюро // Пояснение:</div>
+          <div id="lore-text"></div>
+        </div>
+
+        <button id="submit-btn" class="btn" disabled>Подтвердить выбор</button>
+        <button id="next-btn" class="btn btn-next" style="display: none;">Следующий вопрос</button>
+      </div>
+    </div>
+
+    <!-- ЭКРАН РЕЗУЛЬТАТОВ -->
+    <div id="results-screen" class="screen">
+      <div class="card" style="text-align: center;">
+        <h1 style="margin-bottom: 6px;">Аттестация завершена</h1>
+        <p style="margin-bottom: 12px;">Рапорт оперативника зафиксирован в базе ФБК</p>
+
+        <div id="rank-badge" class="rank-pill">ДИРЕКТОР БЮРО</div>
+        <div id="final-score" class="final-score">0 / 25</div>
+        <p id="rank-desc" style="margin-bottom: 16px;">Описание...</p>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="lbl">Легкий</div>
+            <div id="pct-easy" class="val">0%</div>
+          </div>
+          <div class="stat-box">
+            <div class="lbl">Средний</div>
+            <div id="pct-medium" class="val">0%</div>
+          </div>
+          <div class="stat-box">
+            <div class="lbl">Сложный</div>
+            <div id="pct-hard" class="val">0%</div>
+          </div>
+        </div>
+
+        <button id="restart-btn" class="btn">Пройти другой уровень</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 75 ВОПРОСОВ В СООТВЕТСТВИИ С ОФИЦИАЛЬНОЙ РУССКОЙ ЛОКАЛИЗАЦИЕЙ ИГРЫ
+    const questionsDB = [
+      // ==========================================
+      // ЛЕГКИЙ УРОВЕНЬ (25 ВОПРОСОВ)
+      // ==========================================
+      {
+        id: 1, diff: "easy",
+        q: "Кто является главным играбельным героем (протагонистом) в Control Resonant?",
+        options: ["Дилан Фейден (Dylan Faden)", "Джесси Фейден (Jesse Faden)", "Захария Тренч", "Саймон Ариш"],
+        correct: [0],
+        hint: "Вспомните брата Джесси, который содержался в Секторе Содержания под номером Кандидат P6.",
+        lore: "В Control Resonant управление переходит к Дилану Фейдену, очнувшемуся от семилетней комы после прорыва изоляции."
+      },
+      {
+        id: 2, diff: "easy",
+        q: "В каком районе Нью-Йорка разворачиваются основные события игры после катастрофы?",
+        options: ["Манхэттен", "Бруклин", "Квинс", "Стейтен-Айленд"],
+        correct: [0],
+        hint: "Именно в этом центральном округе Нью-Йорка расположен вход в Старейший Дом на Томас-стрит.",
+        lore: "После коллапса защитных протоколов аномалия охватила улицы Манхэттена, исказив их архитектуру."
+      },
+      {
+        id: 3, diff: "easy",
+        q: "Какое уникальное трансформирующееся оружие ближнего боя получает Дилан?",
+        options: ["«Аберрант» (The Aberrant)", "Табельное оружие (Service Weapon)", "Астральный клинок", "Проектор форм"],
+        correct: [0],
+        hint: "Название этого Предмета Силы переводится как «отклоняющийся от нормы».",
+        lore: "Вместо огнестрельного Табельного оружия Дилан сражается меняющим формы Предметом Силы «Аберрант»."
+      },
+      {
+        id: 4, diff: "easy",
+        q: "Сколько лет прошло по сюжету между финалом Control (2019) и началом Control Resonant?",
+        options: ["7 лет", "1 год", "3 года", "15 лет"],
+        correct: [0],
+        hint: "Первая часть происходила осенью 2019 года, а действие сиквела стартует в 2026 году.",
+        lore: "События Control Resonant начинаются спустя ровно 7 лет после подавления первой вспышки Ииссов Джесси Фейден."
+      },
+      {
+        id: 5, diff: "easy",
+        q: "Какие враждебные параестественные угрозы сеют хаос на Манхэттене? (Выберите ВСЕ верные)",
+        options: ["Ииссы / Шумы (The Hiss)", "Плесень (The Mold)", "«Паттернинг / Узор» (The Patterning)", "Тёмная сущность озера Колдрон"],
+        correct: [0, 1, 2],
+        hint: "Угрозы связаны со Старейшим Домом, подземными спорами Плесени и новой геометрической аномалией города.",
+        lore: "Из здания Бюро прорвались Ииссы и Плесень, соединившись с новой космической угрозой искажения реальности — Паттернингом (Узором)."
+      },
+      {
+        id: 6, diff: "easy",
+        q: "Какие компании официально разрабатывали и продюсировали игру? (Выберите ВСЕ верные)",
+        options: ["Remedy Entertainment (разработчик и издатель)", "Annapurna Pictures (стратегический партнёр)", "Electronic Arts", "Ubisoft"],
+        correct: [0, 1],
+        hint: "Финские создатели франшизы заключили соглашение с кинокомпанией Annapurna Pictures.",
+        lore: "Remedy Entertainment самостоятельно разработала и издала игру при партнёрском софинансировании Annapurna Pictures."
+      },
+      {
+        id: 7, diff: "easy",
+        q: "Кто становится полевым куратором и связной Дилана от лица ФБК по рации?",
+        options: ["Зои Де Вера (Zoe De Vera)", "Эмили Поуп", "Хелен Маршалл", "Сага Андерсон"],
+        correct: [0],
+        hint: "Её имя Зои, и именно она носит с собой пульт контроля от ошейника Дилана.",
+        lore: "Полевой агент ФБК Зои Де Вера связывается с Диланом по радио и направляет его в разрушенном городе."
+      },
+      {
+        id: 8, diff: "easy",
+        q: "На каком графическом движке Remedy создана игра Control Resonant?",
+        options: ["Northlight Engine", "Unreal Engine 5", "Decima Engine", "Unity"],
+        correct: [0],
+        hint: "Фирменный движок Remedy, название которого переводится как «Северное сияние».",
+        lore: "Игра использует проприетарный движок Northlight Engine, оптимизированный под разрушаемость и гравитацию."
+      },
+      {
+        id: 9, diff: "easy",
+        q: "Кем приходится Дилану действующий Директор ФБК Джесси Фейден?",
+        options: ["Родной сестрой", "Приёмной матерью", "Супругой", "Коллегой без родства"],
+        correct: [0],
+        hint: "Они вместе пережили параестественный инцидент в городке Ординари в 2002 году.",
+        lore: "Джесси — родная сестра Дилана, которая искала его на протяжении всего сюжета первой части."
+      },
+      {
+        id: 10, diff: "easy",
+        q: "Какой актёр подарил внешность и голос Дилану Фейдену?",
+        options: ["Шон Дюрри (Sean Durrie)", "Мэттью Порретта", "Илкка Вилли", "Джеймс Маккэффри"],
+        correct: [0],
+        hint: "Этот актёр также играл Ника Маркуса в Quantum Break от Remedy.",
+        lore: "Шон Дюрри (Sean Durrie) вернулся к роли повзрослевшего Дилана в Control Resonant."
+      },
+      {
+        id: 11, diff: "easy",
+        q: "Каким поступком Джесси пробуждает Дилана из комы во вступительном прологе?",
+        options: ["Вонзает Аберрант прямо в его грудь", "Активирует Проектор Слайдов", "Перегружает усилитель HRA", "Читает мантру Совета"],
+        correct: [0],
+        hint: "Джесси передала оружие брату шокирующим и физически болезненным ударом прямо в палате.",
+        lore: "Джесси входит в изолятор к брату и пронзает его грудь Аберрантом, пробуждая от комы, после чего исчезает."
+      },
+      {
+        id: 12, diff: "easy",
+        q: "К какому жанру относится Control Resonant в отличие от шутера первой части?",
+        options: ["Action-RPG / Слэшер от третьего лица", "Пошаговая тактика", "Шутер от первого лица", "Изометрическая RPG"],
+        correct: [0],
+        hint: "Игра сделала акцент на сражения холодным оружием от третьего лица с прокачкой билдов.",
+        lore: "Control Resonant сменила вектор на скоростной ролевой экшен (Action-RPG / слэшер) с оружием ближнего боя."
+      },
+      {
+        id: 13, diff: "easy",
+        q: "Какое кодовое обозначение носил Дилан в архивах ФБК как претендент на пост Директора?",
+        options: ["Кандидат Прайм 6 (P6)", "Кандидат Прайм 7 (P7)", "Объект 36", "Субъект Альфа"],
+        correct: [0],
+        hint: "Джесси числилась под номером P7, а Дилан был предыдущим кандидатом.",
+        lore: "В материалах Бюро Дилан числился как Prime Candidate 6 (P6)."
+      },
+      {
+        id: 14, diff: "easy",
+        q: "Какое устройство контроля закреплено на Дилане агентами Бюро для подстраховки?",
+        options: ["MCD (Мобильное устройство сдерживания)", "Шлем Полярис", "Жилет HRA", "Астральный браслет"],
+        correct: [0],
+        hint: "Аббревиатура на английском — Mobile Containment Device (MCD).",
+        lore: "MCD (Mobile Containment Device) — контролирующий ошейник с электрошоком и маячком слежения."
+      },
+      {
+        id: 15, diff: "easy",
+        q: "Какие три Первичные формы Аберранта (основные атаки) доступны на выбор на старте? (Выберите ВСЕ 3)",
+        options: ["«Удар» (Strike)", "«Глефа» (Glaive)", "«Рассечение» (Cleave)", "«Сокрушение» (Crush)", "«Бур» (Drill)"],
+        correct: [0, 1, 2],
+        hint: "В официальном руководстве три базовые формы — Удар, Глефа и Рассечение. Сокрушение и Бур — тяжелые формы.",
+        lore: "В начале игры на выбор даются три формы: «Удар» (Strike), «Глефа» (Glaive) и «Рассечение» (Cleave)."
+      },
+      {
+        id: 16, diff: "easy",
+        q: "Кто является первым боссом-Резонантом, с которым сражается Дилан в Даунтауне?",
+        options: ["«Художница» (The Artist)", "«Танцовщица» (The Dancer)", "«Дезертир» (The Deserter)", "«Физик» (The Physicist)"],
+        correct: [0],
+        hint: "В русской локализации первой выступает «Художница» в задании «Как победить художницу».",
+        lore: "Первый босс сюжетной линии — «Художница» (The Artist). Победа над ней открывает доступ в Брешь."
+      },
+      {
+        id: 17, diff: "easy",
+        q: "Как называется штаб-квартира Бюро, из которой вырвались параестественные аномалии?",
+        options: ["Старейший Дом (The Oldest House)", "Эмпайр Стейт Билдинг", "Отель «Оушенвью»", "Башня Федерал"],
+        correct: [0],
+        hint: "Бруталистский серый монолит в центре Нью-Йорка, скрытый от глаз непосвященных.",
+        lore: "Штаб-квартирой ФБК является Старейший Дом — Место Силы, подвергшееся прорыву изоляции."
+      },
+      {
+        id: 18, diff: "easy",
+        q: "Какая сущность выступает финальным боссом всей кампании Control Resonant?",
+        options: ["Хедрон / Гедрон (Hedron)", "Тёмная Сущность", "Бывший (The Former)", "Мистер Дороти"],
+        correct: [0],
+        hint: "Полиэдр-многогранник, чей резонанс защищал Бюро от Ииссов в первой части.",
+        lore: "Кульминация сюжета разворачивается вокруг битвы с агрессивной военной сущностью Хедрона."
+      },
+      {
+        id: 19, diff: "easy",
+        q: "Кто написал оригинальное музыкальное сопровождение для Control Resonant?",
+        options: ["Петри Аланко (Petri Alanko)", "Мик Гордон", "Мартин О'Доннелл", "Акира Ямаока"],
+        correct: [0],
+        hint: "Постоянный финский композитор игр Remedy, лауреат премий BAFTA.",
+        lore: "Саундтрек написан Петри Аланко, работавшим над музыкой ко всем ключевым проектам Remedy."
+      },
+      {
+        id: 20, diff: "easy",
+        q: "Какой материал в игре тратится на открытие новых форм и приёмов Аберранта?",
+        options: ["«Живые осколки» (Living Shards)", "Астральный песок", "Свинцовые слитки", "Плазма Ииссов"],
+        correct: [0],
+        hint: "В русском руководстве этот ресурс прямо называется «Живые осколки».",
+        lore: "Живые осколки (Living Shards), добываемые с боссов и испытаний, служат валютой для открытия форм Аберранта."
+      },
+      {
+        id: 21, diff: "easy",
+        q: "Как называется таинственный трансмерный хаб Дилана для настройки умений и оружия?",
+        options: ["«Брешь» / «Промежуток» (The Gap)", "«Пещера»", "«Перекрёсток»", "«Чёрный Сектор»"],
+        correct: [0],
+        hint: "Пространство между мирами, святилище Дилана (в оригинале — The Gap).",
+        lore: "«Брешь» (The Gap) — трансмерный хаб, доступный для мгновенного перехода и улучшения билдов."
+      },
+      {
+        id: 22, diff: "easy",
+        q: "Какой объект городской среды Манхэттена служит точками быстрого перемещения?",
+        options: ["Двери жёлтых такси", "Телефонные будки", "Почтовые ящики", "Люки канализации"],
+        correct: [0],
+        hint: "Знаменитый символ транспорта Нью-Йорка ярко-жёлтого цвета.",
+        lore: "Аномальные двери автомобилей такси служат точками мгновенного перемещения между кварталами."
+      },
+      {
+        id: 23, diff: "easy",
+        q: "Какую должность занимает Эмили Поуп в период текущего кризиса в Бюро?",
+        options: ["И.о. Со-директора и Глава Исследований", "Секретарь Совета", "Начальник охраны", "Рядовой лаборант"],
+        correct: [0],
+        hint: "После исчезновения Джесси именно ведущий учёный Бюро взяла на себя руководство наукой и координацией.",
+        lore: "Эмили Поуп стала исполняющей обязанности Со-директора Бюро и возглавляет Исследовательский сектор."
+      },
+      {
+        id: 24, diff: "easy",
+        q: "Каким оружием сражалась Джесси в оригинальной игре Control 2019 года?",
+        options: ["Табельное оружие (Service Weapon)", "Клинок «Аберрант»", "Дробовик Резонанса", "Пулемёт Бюро"],
+        correct: [0],
+        hint: "Огнестрельный Предмет Силы, олицетворяющий власть Директора ФБК.",
+        lore: "Джесси владела Табельным оружием (Service Weapon), принимавшим формы пистолета, дробовика и ракетницы."
+      },
+      {
+        id: 25, diff: "easy",
+        q: "На каких платформах состоялся официальный релиз игры? (Выберите ВСЕ верные)",
+        options: ["PlayStation 5", "Xbox Series X/S", "Windows PC", "macOS"],
+        correct: [0, 1, 2, 3],
+        hint: "Игра доступна на современных консолях девятого поколения, ПК и компьютерах Apple.",
+        lore: "Игра официально вышла на PlayStation 5, Xbox Series X/S, Windows PC, а также запланирована для macOS."
+      },
+
+      // ==========================================
+      // СРЕДНИЙ УРОВЕНЬ (25 ВОПРОСОВ)
+      // ==========================================
+      {
+        id: 26, diff: "medium",
+        q: "Какие формы Аберранта относятся к классу Вторичных (дополнительных тяжелых атак)? (Выберите ВСЕ верные)",
+        options: ["«Сокрушение» (Crush)", "«Бур» (Drill)", "«Удлинение» (Extend)", "«Рассечение» (Cleave)"],
+        correct: [0, 1, 2],
+        hint: "В руководстве это тяжелый молот, пробивающий бур и цеп с большим радиусом поражения.",
+        lore: "Вторичные формы — это «Сокрушение» (Crush), «Бур» (Drill) и «Удлинение» (Extend). «Рассечение» — первичная форма."
+      },
+      {
+        id: 27, diff: "medium",
+        q: "Какое боевое свойство даёт форма Аберранта «Рассечение» (Cleave)?",
+        options: ["Дополнительный повышенный урон при атаке со спины", "Шанс мгновенного замораживания", "Стрельбу лазерным лучом", "Иммунитет к яду"],
+        correct: [0],
+        hint: "Классическая механика позиционного удара со спины («бэкстэб»).",
+        lore: "Форма «Рассечение» (Cleave) наносит сокрушительный бонусный урон при нанесении ударов со спины."
+      },
+      {
+        id: 28, diff: "medium",
+        q: "Каким преимуществом обладает первичная форма «Удар» (Strike)?",
+        options: ["Быстрая скорость и увеличенный шанс критического удара (+30%)", "Ударная волна по площади", "Вампиризм здоровья", "Ослепление противника"],
+        correct: [0],
+        hint: "Это стремительные выпады с высокой вероятностью критического урона.",
+        lore: "«Удар» (Strike) ориентирован на молниеносные точечные атаки с повышенным шансом критического урона."
+      },
+      {
+        id: 29, diff: "medium",
+        q: "В чём главная боевая специализация формы «Глефа» (Glaive)?",
+        options: ["Широкий размашистый удар по площади и контроль толпы", "Пробивание тяжелых щитов", "Дистанционный бросок", "Установка мин"],
+        correct: [0],
+        hint: "Оружие действует по принципу косы, отбрасывая скопления врагов вокруг Дилана.",
+        lore: "«Глефа» (Glaive) наносит широкий круговой урон по толпе и эффективно контролирует дистанцию."
+      },
+      {
+        id: 30, diff: "medium",
+        q: "Какими функциями обладает модуль MCD на затылке Дилана? (Выберите ВСЕ верные)",
+        options: ["Отслеживание координат по резонансу", "Дистанционный электрошок для обездвиживания", "Аварийный ликвидатор при потере контроля (Kill-switch)", "Телепортация в камеру"],
+        correct: [0, 1, 2],
+        hint: "Бюро контролирует Дилана тремя путями: навигация, болевой разряд и аварийное умерщвление.",
+        lore: "MCD позволяет Бюро отслеживать координаты Дилана, парализовать его током и ликвидировать при неповиновении."
+      },
+      {
+        id: 31, diff: "medium",
+        q: "Кому руководство Бюро передало детонатор-пульт управления модулем MCD Дилана?",
+        options: ["Агенту Зои Де Вера", "Саймону Аришу", "Самому Дилану", "Совету Астрала"],
+        correct: [0],
+        hint: "Пульт безопасности находится у его полевой связной.",
+        lore: "Пульт активации шокера и ликвидатора MCD находится в руках у полевого агента Зои Де Вера."
+      },
+      {
+        id: 32, diff: "medium",
+        q: "Какие способности перемещения Дилан открывает в Разломах (Faults)? (Выберите ВСЕ верные)",
+        options: ["«Двойной прыжок» (Double-Jump)", "«Подъём / Парение» (Elevate)", "«Рывок» (Rush / Shift)", "Телепортация сквозь двери"],
+        correct: [0, 1, 2],
+        hint: "Три ключевые способности акробатики: второй прыжок в воздухе, рывок и набор высоты.",
+        lore: "В Разломах через отголоски Джесси Дилан изучает «Двойной прыжок», «Подъём» (Elevate) и «Рывок» (Rush)."
+      },
+      {
+        id: 33, diff: "medium",
+        q: "Как игрок зарабатывает Очки талантов (Talent Points) в Control Resonant?",
+        options: ["Повышая уровни зон Манхэттена (выполняя подвиги и зачищая секторы)", "Убивая обычных рядовых врагов", "Покупая за доллары в автоматах", "Собирая аудиокассеты"],
+        correct: [0],
+        hint: "Сам Дилан не качает уровни — прокачиваются городские районы Манхэттена.",
+        lore: "Очки талантов выдаются за повышение уровней зон Манхэттена (завершение Feats, открытие сундуков и ликвидацию элиты)."
+      },
+      {
+        id: 34, diff: "medium",
+        q: "Кто из перечисленных сущностей является боссами-Резонантами? (Выберите ВСЕХ)",
+        options: ["«Танцовщица» (The Dancer)", "«Дезертир» (The Deserter)", "«Коллектив» (The Collective)", "«Физик» (The Physicist)"],
+        correct: [0, 1, 2, 3],
+        hint: "Все четверо — официальные региональные боссы-Резонанты Манхэттена.",
+        lore: "The Dancer, The Deserter, The Collective и The Physicist — ключевые боссы-Резонанты сюжетной кампании."
+      },
+      {
+        id: 35, diff: "medium",
+        q: "В каком районе города находится босс-Резонант «Коллектив» (The Collective)?",
+        options: ["Центральный Парк (The Park)", "Таймс-Сквер", "Бруклинский мост", "Уолл-Стрит"],
+        correct: [0],
+        hint: "Зеленая парковая зона Манхэттена, перекрытая воротами заражения Плесенью.",
+        lore: "«Коллектив» обосновался в Центральном Парке (The Park) возле Врат Плесени."
+      },
+      {
+        id: 36, diff: "medium",
+        q: "Какой стихийный эффект лежит в основе атак босса «Дезертир» (The Deserter)?",
+        options: ["Огонь и Поджог (Burn / Fire)", "Заморозка", "Электрический разряд", "Кислотный туман"],
+        correct: [0],
+        hint: "Бывший оперативник Бюро заливает арену цехов расплавленным огнем.",
+        lore: "«Дезертир» атакует огненными волнами, накладывая на Дилана смертоносный статус горения (Burn)."
+      },
+      {
+        id: 37, diff: "medium",
+        q: "Какой статус накладывают споровые способности, полученные от босса «Коллектив»?",
+        options: ["«Заражение» (Infected / Mold)", "Кровотечение", "Глухота", "Слепота"],
+        correct: [0],
+        hint: "Биологическое заражение спорами из лабораторий доктора Андерхилл.",
+        lore: "Споровые приёмы накладывают статус «Заражение» (Infected), взрывающийся дополнительным уроном от огня."
+      },
+      {
+        id: 38, diff: "medium",
+        q: "Какие умения на выбор открываются после победы над «Коллективом»? (Выберите ВСЕ верные)",
+        options: ["«Споровый залп» (Spore Burst)", "«Разрастание» (Growth)", "Метеоритный дождь", "Ледяной шквал"],
+        correct: [0, 1],
+        hint: "Выстрелы спорами на дистанции и выращивание взрывных наростов плесени под ногами.",
+        lore: "Игрок может выбрать «Споровый залп» (Spore Burst) либо ловушки «Разрастание» (Growth)."
+      },
+      {
+        id: 39, diff: "medium",
+        q: "Какие боевые умения огненной стихии открываются после босса «Дезертир»? (Выберите ВСЕ верные)",
+        options: ["«Воспламенение» (Ignite)", "«Инферно» (Inferno)", "Кислотное облако", "Ледяная сфера"],
+        correct: [0, 1],
+        hint: "Оба навыка прямо связаны с огнем: направленный поджог и круговое инферно.",
+        lore: "Ветка Дезертира открывает огненные способности прямого поражения «Ignite» и зональное «Inferno»."
+      },
+      {
+        id: 40, diff: "medium",
+        q: "Какая защитная механика является ключевой в ближнем бою вместо блокирования?",
+        options: ["«Идеальное уклонение» (Perfect Dodge)", "Тяжелый металлический щит", "Парирование клинком", "Перекат назад"],
+        correct: [0],
+        hint: "В настройках режима помощи есть отдельный пункт для окна «Идеального уклонения».",
+        lore: "Боевая система построена на «Идеальном уклонении» (Perfect Dodge), дающем кадры неуязвимости и контратаку."
+      },
+      {
+        id: 41, diff: "medium",
+        q: "Какой расходный предмет позволяет полностью сбросить распределение талантов (Respec)?",
+        options: ["Reset Item", "Таблетка амнезии", "Астральный куб", "Стиратель памяти"],
+        correct: [0],
+        hint: "Предмет с лаконичным названием на английском для сброса прокачки.",
+        lore: "Предмет «Reset Item» позволяет обнулить потраченные очки талантов и перенастроить билд."
+      },
+      {
+        id: 42, diff: "medium",
+        q: "Какая актриса озвучила специального агента Зои Де Вера?",
+        options: ["Фрэнки Кевич (Frankie Kevich)", "Кортни Хоуп", "Кристина Коул", "Камилла Ладдингтон"],
+        correct: [0],
+        hint: "Молодая актриса озвучки Фрэнки Кевич.",
+        lore: "Агента Зои Де Вера сыграла и озвучила актриса Фрэнки Кевич (Frankie Kevich)."
+      },
+      {
+        id: 43, diff: "medium",
+        q: "Сколько основных сюжетных заданий насчитывает кампания Control Resonant?",
+        options: ["18 заданий", "8 заданий", "30 заданий", "50 заданий"],
+        correct: [0],
+        hint: "В руководствах VGTimes и StopGame описано ровно 18 сюжетных глав.",
+        lore: "Основная сюжетная линия состоит из 18 проработанных сюжетных миссий."
+      },
+      {
+        id: 44, diff: "medium",
+        q: "Как называется вводная обучающая миссия игры в русской версии?",
+        options: ["«Адаптация» (Orientation)", "«Инфильтрация»", "«Прибытие»", "«Красная нить»"],
+        correct: [0],
+        hint: "В официальном переводе первая глава называется «Адаптация».",
+        lore: "Пролог и обучающая миссия в русской локализации озаглавлены как «Адаптация» (Orientation)."
+      },
+      {
+        id: 45, diff: "medium",
+        q: "Как называется первый сюжетный Акт игры после пролога?",
+        options: ["«Сдерживание кризиса» (Contain the Crisis)", "«Охота на Ииссов»", "«Спасти Джесси»", "«Темный город»"],
+        correct: [0],
+        hint: "Пятое сюжетное задание и название Акта 1 — «Сдерживание кризиса».",
+        lore: "Акт 1 официально называется «Сдерживание кризиса» (Contain the Crisis)."
+      },
+      {
+        id: 46, diff: "medium",
+        q: "Как озаглавлен кульминационный третий Акт сюжета?",
+        options: ["«Уничтожить Хедрона» (Defeat the Hedron)", "«Астральная война»", "«Последний рубеж»", "«Конец времен»"],
+        correct: [0],
+        hint: "Цель финала прямо указана в названии: победить главного противника.",
+        lore: "Акт 3 разворачивается вокруг операции по ликвидации сущности и называется «Defeat the Hedron»."
+      },
+      {
+        id: 47, diff: "medium",
+        q: "Как в журнале заданий называется сюжетная ветка по поиску пропавшей сестры?",
+        options: ["«Поиски Джесси» (Search for Jesse)", "«Эхо сестры»", "«Пропавший Директор»", "«Кровные узы»"],
+        correct: [0],
+        hint: "Прямая формулировка задачи: «Поиски Джесси».",
+        lore: "Линейка заданий в Разломах объединена под заголовком «Поиски Джесси» (Search for Jesse)."
+      },
+      {
+        id: 48, diff: "medium",
+        q: "Какую деталь Саймон Ариш извлекает из Художницы для сборки оружия CFD?",
+        options: ["Голову босса (как резонатор частоты Паттернинга)", "Сердечный кристалл", "Руку с когтями", "Глазное яблоко"],
+        correct: [0],
+        hint: "Голова поверженной сущности вибрирует на резонансной частоте Узора.",
+        lore: "Ариш использует голову Художницы как органический усилитель резонанса в приборе CFD против Ииссов."
+      },
+      {
+        id: 49, diff: "medium",
+        q: "Что происходит с противником, когда Дилан заполняет его шкалу «Ошеломления» (Falter)?",
+        options: ["Враг оглушается и становится уязвимым для «Казни» (Execution)", "Враг мгновенно взрывается", "Враг восстанавливает щит", "Враг уходит в невидимость"],
+        correct: [0],
+        hint: "Враг входит в ступор, и загорается кнопка проведения добивающего удара.",
+        lore: "Заполнение шкалы Falter (Ошеломления) сбивает цель с ног и открывает окно для «Казни» (Execution)."
+      },
+      {
+        id: 50, diff: "medium",
+        q: "Какой постоянный эффект получает Дилан сразу после успешной «Казни» (Execution)?",
+        options: ["Временное усиление урона оружия и заряд энергии способностей", "Полную неуязвимость на 60 секунд", "1000 очков опыта", "Бесконечную шкалу здоровья"],
+        correct: [0],
+        hint: "Казнь активирует боевой прилив сил: клинок бьет больнее, а энергия умений заполняется.",
+        lore: "Казнь (Execution) дает бафф к урону ближнего боя и мгновенно восполняет ресурс умений."
+      },
+
+      // ==========================================
+      // СЛОЖНЫЙ УРОВЕНЬ (25 ВОПРОСОВ)
+      // ==========================================
+      {
+        id: 51, diff: "hard",
+        q: "Какая тайна о природе сиблингов раскрывается под кодовым именем «Jesse Dylan Faden»?",
+        options: [
+          "До инцидента в Ординари они были одним существом/ребёнком, расколотым на брата и сестру",
+          "Дилан был выращен в пробирке доктором Дарлингом как клон",
+          "Джесси никогда не существовало — она была галлюцинацией",
+          "Они пришельцы из другого измерения без земных родителей"
+        ],
+        correct: [0],
+        hint: "Сны Дилана о том, что родители в Ординари помнили только одного ребенка, раздвоившегося у Проектора.",
+        lore: "Архивы и диалоги раскрывают: Проектор Слайдов расщепил единую личность Джесси-Дилан на двух детей."
+      },
+      {
+        id: 52, diff: "hard",
+        q: "В каком камео с живыми актёрами появился творческий руководитель Remedy Сэм Лейк?",
+        options: ["Напарник ночного сторожа (Nightswatchman's Partner)", "Алекс Кейси", "Уборщик Ахти", "Агент в закусочной"],
+        correct: [0],
+        hint: "Сэм Лейк сыграл напарника ночного сторожа в видеозаписи ночной смены.",
+        lore: "В титрах и видеороликах Сэм Лейк указан в роли «Nightswatchman's Partner»."
+      },
+      {
+        id: 53, diff: "hard",
+        q: "Какова истинная природа космической сущности Хедрон (Hedron) в сюжете Resonant?",
+        options: [
+          "Хедрон — раса сущностей; прибывший Хедрон Паттернинга стремится стерилизовать Землю от Ииссов ценой людей",
+          "Хедрон был порождением рукописи Алана Уэйка",
+          "Хедрон — это трансформировавшийся директор Нортмур",
+          "Хедрон подчиняется Совету и является шпионом"
+        ],
+        correct: [0],
+        hint: "Холодная космическая логика стерилизации: полное выжигание биосферы Земли ради уничтожения Ииссов.",
+        lore: "Хедрон Паттернинга — беспощадный «чистильщик», уничтожающий Ииссов ценой гибели земной жизни."
+      },
+      {
+        id: 54, diff: "hard",
+        q: "Чем завершается финальное противостояние игры, зеркально меняя роли героев?",
+        options: [
+          "Дилан побеждает Хедрона и остаётся на ногах, а истощенная Джесси впадает в кому",
+          "Дилан погибает в разломе, а Джесси празднует победу",
+          "Дилан становится новым Директором ФБК, а Джесси уезжает в Брайт-Фоллс",
+          "Старейший Дом разрушается до основания"
+        ],
+        correct: [0],
+        hint: "Брат и сестра полностью поменялись местами по сравнению с финалом Control 2019 года.",
+        lore: "Финал переворачивает концовку 2019 года: Дилан бодрствует и свободен, а Джесси погружается в кому."
+      },
+      {
+        id: 55, diff: "hard",
+        q: "Какие приёмы являются официальными завершающими комбинациями (Finishers) Аберранта? (Выберите ВСЕ верные)",
+        options: ["«Сокрушительное избиение» (Concussive Beatdown)", "«Раздвоенная орбита» (Split Orbit)", "«Всплеск апперкота» (Uppercut Surge)", "«Вихревое лезвие» (Spin Edge)", "«Широкое лезвие» (Wide Edge)", "«Раздвоенная опора» (Split Pivot)"],
+        correct: [0, 1, 2, 3, 4, 5],
+        hint: "В руководстве по Аберранту перечислены все шесть уникальных финишеров серии атак.",
+        lore: "Все шесть приёмов — официальные комбо-финишеры Аберранта, открываемые за Живые осколки."
+      },
+      {
+        id: 56, diff: "hard",
+        q: "В каком сюжетном задании Дилан исследует глубинную структуру Тоннеля под Старейшим Домом?",
+        options: ["«Повторения и версии» (Recursions and Iterations) / Разлом в Тоннеле", "«Разлом в метро»", "«Линии электропередач»", "«Темное ядро»"],
+        correct: [0],
+        hint: "Глава 14 в прохождении — «Повторения и версии» (Recursions and Iterations).",
+        lore: "Задание «Повторения и версии» (Recursions and Iterations) ведёт Дилана в загадочный Тоннель (Underpass)."
+      },
+      {
+        id: 57, diff: "hard",
+        q: "Сколько исследовательских шаров нужно срезать в побочном задании «Исследование Поуп» (Pope's Research)?",
+        options: ["8 шаров", "3 шара", "12 шаров", "5 шаров"],
+        correct: [0],
+        hint: "Чётное число, равное количеству щупалец осьминога.",
+        lore: "В задании «Pope's Research» Дилану необходимо срезать ровно 8 метеозондов с исследовательскими датчиками."
+      },
+      {
+        id: 58, diff: "hard",
+        q: "Что создают установленные реле в квесте «Исследование Поуп» для полётов между парящими секторами?",
+        options: ["Гравитационные колодцы (Gravity Wells)", "Квантовые мосты", "Канатные дороги", "Астральные батуты"],
+        correct: [0],
+        hint: "Аномальные гравитационные воронки, подбрасывающие героя в воздух.",
+        lore: "Активация зондов генерирует гравитационные колодцы (Gravity Wells), подбрасывающие Дилана между островами."
+      },
+      {
+        id: 59, diff: "hard",
+        q: "В каком здании Западной зоны вторжения Дилан сражается с боссом «Танцовщица» (The Dancer)?",
+        options: ["Искаженный театр (Patterned Theater)", "Библиотека", "Музей естествознания", "Метрополитен-опера"],
+        correct: [0],
+        hint: "Театральное здание со зрительным залом и сценой в Западной зоне вторжения.",
+        lore: "«Танцовщица» находится в локации Patterned Theater (Искаженный театр) в секторе West Incursion Zone."
+      },
+      {
+        id: 60, diff: "hard",
+        q: "Где расположен боевой комплекс босса «Дезертир» (The Deserter)?",
+        options: ["Искаженная фабрика (Patterned Factory в Центральном секторе)", "Заброшенный отель", "Банковское хранилище", "Автовокзал"],
+        correct: [0],
+        hint: "Промышленный завод с конвейерами и печами в Центральном районе.",
+        lore: "«Дезертир» забаррикадировался в локации Patterned Factory (Искаженная фабрика) в Центральном районе."
+      },
+      {
+        id: 61, diff: "hard",
+        q: "Кто выступает шестым искаженным боссом-Резонантом перед решающей битвой с Хедроном?",
+        options: ["«Со-директор» (The Co-Director)", "«Судья»", "«Профессор»", "«Архитектор»"],
+        correct: [0],
+        hint: "Искаженное подобие высшего руководства Бюро.",
+        lore: "Шестым Резонантом является грозный «Со-директор» (The Co-Director), владеющий способностями Бюро."
+      },
+      {
+        id: 62, diff: "hard",
+        q: "Что растёт в самой глубокой точке Тоннеля прямо под фундаментом Старейшего Дома?",
+        options: ["Молодое дерево (считающееся живой ризомой Старейшего Дома)", "Гигантский кактус", "Грибная колония", "Железный дуб"],
+        correct: [0],
+        hint: "Живое дерево, из корневища которого вырастает фундамент здания Бюро.",
+        lore: "В глубине Тоннеля растет молодое дерево — живое корневище (ризома) самого Старейшего Дома."
+      },
+      {
+        id: 63, diff: "hard",
+        q: "Какая женщина-врач фиксирует мозговую активность спящей Джесси в Эпилоге?",
+        options: ["Доктор Мила Флорес (Dr. Mila Florez)", "Доктор Андерхилл", "Доктор Сигрид", "Доктор Дженкинс"],
+        correct: [0],
+        hint: "Испанская фамилия исследовательницы нейроактивности Бюро.",
+        lore: "В эпилоге Эмили сообщает, что доктор Мила Флорес (Dr. Mila Florez) зафиксировала импульсы в мозге Джесси."
+      },
+      {
+        id: 64, diff: "hard",
+        q: "Какой редкий артефакт Дилан получает в награду за прохождение эпилога «Начало» (The Beginning)?",
+        options: ["Untapped Pickpocket's Tool Artifact", "Astral Shard", "Golden Gun", "Infinity Band"],
+        correct: [0],
+        hint: "Инструмент вора-карманника («Pickpocket's Tool») со статусом Untapped.",
+        lore: "Наградой за эпилог является редкий модификатор «Untapped Pickpocket's Tool Artifact»."
+      },
+      {
+        id: 65, diff: "hard",
+        q: "Как озаглавлена финальная эпилоговая миссия игры в русской версии?",
+        options: ["«Начало» (The Beginning)", "«Последствия»", "«Час Зеро»", "«Новый фундамент»"],
+        correct: [0],
+        hint: "Символичное название: завершение сюжета становится началом новой эпохи.",
+        lore: "Эпилог символично назван «Начало» (The Beginning)."
+      },
+      {
+        id: 66, diff: "hard",
+        q: "Какой трек звучит из плеера Зои Де Вера во время уличного сражения на стройплощадке?",
+        options: ["«Fight for Control»", "«Take Control» (Old Gods of Asgard)", "«Herald of Darkness»", "«Dark Ocean Summoning»"],
+        correct: [0],
+        hint: "Динамичный трек с фразой «Fight for Control» в припеве.",
+        lore: "В боевом эпизоде звучит композиция «Fight for Control» из плеера Зои."
+      },
+      {
+        id: 67, diff: "hard",
+        q: "Как называется картографический побочный квест по расстановке пилонов-сенсоров?",
+        options: ["«Записки: Картографирование Нового Нью-Йорка» (Notes: Mapping the New New York)", "«Сенсорная сеть»", "«Сканирование улиц»", "«План Бюро»"],
+        correct: [0],
+        hint: "Квест носит название «Notes: Mapping the New New York».",
+        lore: "Квест по сканированию кварталов называется «Notes: Mapping the New New York»."
+      },
+      {
+        id: 68, diff: "hard",
+        q: "Какой ключевой талант центральной ветки активирует режим боевого фокуса и концентрации?",
+        options: ["«Повышенное состояние» (Heightened State)", "Жажда крови", "Фокус-всплеск", "Астральная броня"],
+        correct: [0],
+        hint: "Термин, обозначающий особое обостренное состояние рефлексов.",
+        lore: "Талант «Heightened State» значительно усиливает Дилана в разгаре затяжного сражения."
+      },
+      {
+        id: 69, diff: "hard",
+        q: "Какую пасхалку запускает Совет (The Board), если простоять несколько минут неподвижно в Бреши?",
+        options: ["Совет начинает ритмично петь / издавать хоровые звуки", "Экран чернеет и гаснет", "Появляется танцующий Ахти", "Монолит взрывается"],
+        correct: [0],
+        hint: "Чёрная монолитная пирамида Совета неожиданно демонстрирует хоровое пение.",
+        lore: "Если задержаться в хабе The Gap без движения, монолит Совета начинает издавать гармоничное пение."
+      },
+      {
+        id: 70, diff: "hard",
+        q: "С каким пропавшим слайдом Проектора из Ординари лорно связана природа «Бреши» (The Gap)?",
+        options: ["Слайд №9 (утерянный)", "Слайд №36", "Слайд №1", "Слайд №13"],
+        correct: [0],
+        hint: "Один из диапозитивов проектора, который в 2002 году считался сгоревшим или утерянным.",
+        lore: "Записи связывают измерение Бреши с таинственным утерянным Слайдом №9."
+      },
+      {
+        id: 71, diff: "hard",
+        q: "Кто выступил ведущим со-сценаристом игры вместе с геймдиректором Микаэлем Касуриненом?",
+        options: ["Эшли Смит (Ashley Smith)", "Сэм Лейк", "Дрю Карпишин", "Нил Дракманн"],
+        correct: [0],
+        hint: "Сценаристка студии Remedy Эшли Смит.",
+        lore: "Сюжет игры создавался тандемом Микаэля Касуринена и Эшли Смит (Ashley Smith)."
+      },
+      {
+        id: 72, diff: "hard",
+        q: "Какой известный аудиохудожник работал над саунд-дизайном игры вместе с Петри Аланко?",
+        options: ["Мартин Стиг Андерсен (Martin Stig Andersen)", "Бен Бёрри", "Ханс Циммер", "Джеспер Кюд"],
+        correct: [0],
+        hint: "Датский звукорежиссер, оформлявший аудиодизайн Inside, Wolfenstein II и Control.",
+        lore: "Саунд-дизайнер Мартин Стиг Андерсен создал зловещие акустические эффекты Узора."
+      },
+      {
+        id: 73, diff: "hard",
+        q: "Какой режим повышенной сложности был подготовлен разработчиками для эндгейма?",
+        options: ["New Game++ (с сотнями итераций искажения реальности)", "Королевская битва", "Режим зомби-выживания", "Карточный баттлер"],
+        correct: [0],
+        hint: "Расширенный режим повторного прохождения с двумя плюсами в названии.",
+        lore: "Режим New Game++ позволяет проходить бесконечные циклы с искажениями реальности."
+      },
+      {
+        id: 74, diff: "hard",
+        q: "Кто выступил ведущим исполнительным продюсером Control Resonant в студии Remedy?",
+        options: ["Юха Вайнио (Juha Vainio)", "Теро Виртала", "Маркус Мяки", "Томас Пуха"],
+        correct: [0],
+        hint: "Финское имя Юха — ветеран продюсирования Alan Wake 2 и Control.",
+        lore: "Опытный продюсер Remedy Юха Вайнио (Juha Vainio) возглавил разработку проекта."
+      },
+      {
+        id: 75, diff: "hard",
+        q: "Какой редкий артефакт вручается Дилану за расстановку всех картографических сенсоров в городе?",
+        options: ["Untapped Fork Artifact", "Compass of Babel", "Resonant Watch", "Chronos Stone"],
+        correct: [0],
+        hint: "В названии астрального модификатора фигурирует вилка («Fork»).",
+        lore: "За выполнение задания по картографированию Манхэттена выдается артефакт «Untapped Fork Artifact»."
+      }
+    ];
+
+    // Управление приложением
+    let chosenDifficulty = "easy";
+    let activeQuestions = [];
+    let curIndex = 0;
+    let totalScore = 0;
+    let selectedSet = new Set();
+    let stats = {
+      easy: { total: 0, wins: 0 },
+      medium: { total: 0, wins: 0 },
+      hard: { total: 0, wins: 0 }
+    };
+
+    // DOM Элементы
+    const startScreen = document.getElementById("start-screen");
+    const quizScreen = document.getElementById("quiz-screen");
+    const resultsScreen = document.getElementById("results-screen");
+    const diffChips = document.querySelectorAll(".diff-chip");
+    const startBtn = document.getElementById("start-btn");
+
+    const qCounter = document.getElementById("q-counter");
+    const diffTag = document.getElementById("diff-tag");
+    const progressBar = document.getElementById("progress-bar");
+    const qText = document.getElementById("q-text");
+    const hintBox = document.getElementById("hint-box");
+    const hintContent = document.getElementById("hint-content");
+    const optionsContainer = document.getElementById("options-container");
+    const loreBox = document.getElementById("lore-box");
+    const loreText = document.getElementById("lore-text");
+    const submitBtn = document.getElementById("submit-btn");
+    const nextBtn = document.getElementById("next-btn");
+
+    const rankBadge = document.getElementById("rank-badge");
+    const finalScore = document.getElementById("final-score");
+    const rankDesc = document.getElementById("rank-desc");
+    const pctEasy = document.getElementById("pct-easy");
+    const pctMedium = document.getElementById("pct-medium");
+    const pctHard = document.getElementById("pct-hard");
+    const restartBtn = document.getElementById("restart-btn");
+
+    // Выбор уровня сложности
+    diffChips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        diffChips.forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        chosenDifficulty = chip.getAttribute("data-diff");
+      });
+    });
+
+    // Старт квиза
+    startBtn.addEventListener("click", () => {
+      if (chosenDifficulty === "all") {
+        activeQuestions = [...questionsDB];
+      } else {
+        activeQuestions = questionsDB.filter(item => item.diff === chosenDifficulty);
+      }
+
+      curIndex = 0;
+      totalScore = 0;
+      stats = {
+        easy: { total: 0, wins: 0 },
+        medium: { total: 0, wins: 0 },
+        hard: { total: 0, wins: 0 }
+      };
+
+      startScreen.classList.remove("active");
+      resultsScreen.classList.remove("active");
+      quizScreen.classList.add("active");
+
+      showQuestion();
+    });
+
+    // Отрисовка вопроса
+    function showQuestion() {
+      const qData = activeQuestions[curIndex];
+      selectedSet.clear();
+      submitBtn.disabled = true;
+      submitBtn.style.display = "block";
+      nextBtn.style.display = "none";
+      loreBox.style.display = "none";
+
+      // Сброс и заполнение подсказки
+      hintBox.removeAttribute("open");
+      hintContent.textContent = qData.hint || "Внимательно изучите формулировку вопроса и сопоставьте события с сюжетом игры.";
+
+      qCounter.textContent = `Вопрос ${curIndex + 1} из ${activeQuestions.length}`;
+      progressBar.style.width = `${(curIndex / activeQuestions.length) * 100}%`;
+
+      diffTag.textContent = qData.diff === "easy" ? "Легкий" : qData.diff === "medium" ? "Средний" : "Сложный";
+      diffTag.className = `tag tag-${qData.diff}`;
+
+      qText.textContent = qData.q;
+      optionsContainer.innerHTML = "";
+
+      qData.options.forEach((optStr, idx) => {
+        const item = document.createElement("div");
+        item.className = "option-card";
+        item.innerHTML = `
+          <div class="option-checkbox"></div>
+          <div class="option-title">${optStr}</div>
+        `;
+
+        item.addEventListener("click", () => {
+          if (item.classList.contains("locked")) return;
+
+          if (selectedSet.has(idx)) {
+            selectedSet.delete(idx);
+            item.classList.remove("checked");
+          } else {
+            selectedSet.add(idx);
+            item.classList.add("checked");
+          }
+
+          submitBtn.disabled = selectedSet.size === 0;
+        });
+
+        optionsContainer.appendChild(item);
+      });
+    }
+
+    // Проверка ответа
+    submitBtn.addEventListener("click", () => {
+      const qData = activeQuestions[curIndex];
+      const correctSet = new Set(qData.correct);
+
+      const isPerfect = 
+        selectedSet.size === correctSet.size &&
+        [...selectedSet].every(val => correctSet.has(val));
+
+      stats[qData.diff].total++;
+      if (isPerfect) {
+        totalScore++;
+        stats[qData.diff].wins++;
+      }
+
+      const cards = optionsContainer.querySelectorAll(".option-card");
+      cards.forEach((card, idx) => {
+        card.classList.add("locked");
+        const wasPicked = selectedSet.has(idx);
+        const isRight = correctSet.has(idx);
+
+        if (wasPicked && isRight) {
+          card.classList.add("correct");
+        } else if (wasPicked && !isRight) {
+          card.classList.add("incorrect");
+        } else if (!wasPicked && isRight) {
+          card.classList.add("missed");
+        }
+      });
+
+      loreText.textContent = qData.lore;
+      loreBox.style.display = "block";
+
+      submitBtn.style.display = "none";
+      nextBtn.style.display = "block";
+      progressBar.style.width = `${((curIndex + 1) / activeQuestions.length) * 100}%`;
+    });
+
+    // Следующий вопрос
+    nextBtn.addEventListener("click", () => {
+      curIndex++;
+      if (curIndex < activeQuestions.length) {
+        showQuestion();
+      } else {
+        renderResults();
+      }
+    });
+
+    // Экран результатов
+    function renderResults() {
+      quizScreen.classList.remove("active");
+      resultsScreen.classList.add("active");
+
+      const total = activeQuestions.length;
+      finalScore.textContent = `${totalScore} / ${total}`;
+      const pct = Math.round((totalScore / total) * 100);
+
+      if (pct >= 90) {
+        rankBadge.textContent = "ДОПУСК: ДИРЕКТОР БЮРО";
+        rankBadge.style.borderColor = "var(--success)";
+        rankBadge.style.color = "var(--success)";
+        rankDesc.textContent = "Феноменальный результат! Вы знаете каждый секрет Паттернинга, Аберранта и тайну Джесси-Дилана.";
+      } else if (pct >= 70) {
+        rankBadge.textContent = "ДОПУСК: СТАРШИЙ АГЕНТ";
+        rankBadge.style.borderColor = "var(--accent-violet)";
+        rankBadge.style.color = "var(--accent-violet)";
+        rankDesc.textContent = "Отличная оперативная подготовка. Вы уверенно ориентируетесь в формах Аберранта и региональных Резонантах.";
+      } else if (pct >= 50) {
+        rankBadge.textContent = "ДОПУСК: КАНДИДАТ P6 (НАБЛЮДЕНИЕ)";
+        rankBadge.style.borderColor = "var(--accent-gold)";
+        rankBadge.style.color = "var(--accent-gold)";
+        rankDesc.textContent = "Базовый инструктаж пройден, но сложные нюансы Хедрона и Тоннеля требуют повторного изучения архивов.";
+      } else {
+        rankBadge.textContent = "КАРАНТИН: ПОДВЕРЖЕН ИИСИСАМ";
+        rankBadge.style.borderColor = "var(--accent-red)";
+        rankBadge.style.color = "var(--accent-red)";
+        rankDesc.textContent = "Ваше сознание затуманено резонансом. Рекомендуется повторное прохождение игры в наушниках.";
+      }
+
+      const formatPct = (key) => {
+        const item = stats[key];
+        return item.total > 0 ? `${Math.round((item.wins / item.total) * 100)}%` : "—";
+      };
+
+      pctEasy.textContent = formatPct("easy");
+      pctMedium.textContent = formatPct("medium");
+      pctHard.textContent = formatPct("hard");
+    }
+
+    // Рестарт
+    restartBtn.addEventListener("click", () => {
+      resultsScreen.classList.remove("active");
+      startScreen.classList.add("active");
+    });
+  </script>
+</body>
+</html>
